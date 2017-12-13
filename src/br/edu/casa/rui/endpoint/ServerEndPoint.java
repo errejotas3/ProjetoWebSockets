@@ -1,13 +1,10 @@
 package br.edu.casa.rui.endpoint;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
@@ -31,7 +28,6 @@ public class ServerEndPoint {
 	public void handleOpen(Session ses) {
 		System.out.println("Novo cliente conectado ao chat");
 		onOpen = ses;
-		System.out.println("OPEN" + onOpen.getId());
 		mapsize = mapsize + 1;
 		System.out.println(ses.getId());
 		cliente.setNome("JonhDoe");
@@ -45,33 +41,43 @@ public class ServerEndPoint {
 		System.out.println(mapsize);
 		try {
 			ses.getBasicRemote().sendText("Bem vindo ao chat, favor utilizar o comando /rename");
-			ses.getBasicRemote().sendText(cliente.getNome());
 		} catch (IOException ex) {
 			ex.getStackTrace();
 		}
 	}
 	@OnMessage
 	public String handleMessage(String message, Session sesmessage) {
-		System.out.println("Recebido do cliente: " + message);
-		System.out.println("cliente que enviou: " + sesmessage.getId());
 		onMessage = sesmessage;
 		String recebida;
-		System.out.println("MESSAGE" + onMessage.getId());
 		for(int i = 0; i <= mapsize; i++) {
 			if(onMessage.getId() == session.get(i).getId()) {
 				recebida = message;
 				verificar(recebida, sesmessage);
 			}
 		}
-		//COMEÇA A TRATAR A STRING RECEBIDA
-		String sesid = sesmessage.getId();
 		String replyMessage="";
-		System.out.println("Enviado ao cliente: " + replyMessage);
 		return replyMessage;
 	}
 	@OnClose
 	public void handleClose() {
-		System.out.println("Cliente saiu do chat.");
+//		for(int i = 0; i <= session.size(); i++) {
+//			if(close.getId().equals(session.get(i).getId())) {
+//
+//				String saiu = clients.get(i).getNome();
+//				for(int key : session.keySet()) {
+//					try {
+//						session.get(key).getBasicRemote().sendText(saiu + " Saiu do chat.");
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
+//				}
+//				session.remove(i, close);
+//				clients.remove(i, cliente.getNome().equals(saiu));
+				System.out.println("Cliente saiu do chat.");
+//			}else break;
+//		}
+//		
+
 	}
 	@OnError
 	public void handleError(Throwable t) {
@@ -81,6 +87,7 @@ public class ServerEndPoint {
 		//TRATA A DATA
 		Date date = new Date();
 		SimpleDateFormat formatador = new SimpleDateFormat("dd/MM/yyyy");
+		String dataFormatada = formatador.format(date);
 		Calendar data = Calendar.getInstance();
 		int horas = data.get(Calendar.HOUR_OF_DAY);
 		int minutos = data.get(Calendar.MINUTE);
@@ -91,7 +98,6 @@ public class ServerEndPoint {
 		aux = splited[0];
 
 		switch (aux) {
-
 		case ("/send"):
 			for(int i = 0; i <= mapsize; i++) {
 				if(onMessage.getId() == session.get(i).getId()) {
@@ -100,38 +106,35 @@ public class ServerEndPoint {
 						try {
 							onMessage.getBasicRemote().sendText("Para entrar no chat utilize o comando /rename");
 						} catch (IOException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						break;
 					}else {
 
 						if(splited[1].equals("-all")) {
-							System.out.println("estou no all");
 							finalMessage = verifica.replace("/send -all", "");
 							System.out.println(verifica);
 							System.out.println(finalMessage);
 							for(int key : session.keySet()) {
 								try {
-									session.get(key).getBasicRemote().sendText(finalMessage);
+									session.get(key).getBasicRemote().sendText(userx + " diz: " + finalMessage + " - <" + horas + ":" + minutos + "><" + dataFormatada + ">");
 								} catch (IOException e) {
 									e.printStackTrace();
 								}
 							}
 						}else
 							if(splited[1].equals("-user")) {
-								System.out.println("estou no user");
 								String usuario = splited[2];
 								int tamanho = usuario.length() + 12;
 								finalMessage = verifica.substring(tamanho);
-								
+
 								for(int u : clients.keySet()) {
 									String resultado = clients.get(u).getNome();
 									if(resultado.equals(usuario)) {
 										Session enviar;
 										enviar = session.get(u);
 										try {
-											enviar.getBasicRemote().sendText(finalMessage);
+											enviar.getBasicRemote().sendText(userx + " diz: " + finalMessage + " - <" + horas + ":" + minutos + "><" + dataFormatada + ">");
 										} catch (IOException e) {
 											e.printStackTrace();
 										}
@@ -170,30 +173,56 @@ public class ServerEndPoint {
 		case("/rename"):
 			String newName = splited[1];
 		for(int i = 0; i <= mapsize; i++) {
-			if(onMessage.getId() == session.get(i).getId()) {
-				String teste = clients.get(i).getNome();
-				System.out.println(teste);
-				clients.get(i).setNome(newName);
-				clients.get(i).setPermissao(true);
-				teste = clients.get(i).getNome();
+
+			if(clients.get(i).getNome().equals(newName)) {
+				try {
+					onMessage.getBasicRemote().sendText(newName + " Já está em uso, favor escolher outro nome.");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 				break;
-			}
+			}else
+
+				if(onMessage.getId() == session.get(i).getId()) {
+					String teste = clients.get(i).getNome();
+					if(teste.equals("JonhDoe")) {
+						for(int key : session.keySet()) {
+							try {
+								session.get(key).getBasicRemote().sendText(newName + " Entrou no chat");
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+
+					}
+					else {
+						for(int key : session.keySet()) {
+							try {
+								session.get(key).getBasicRemote().sendText(teste + " agora é: " + newName);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+
+					}
+					clients.get(i).setNome(newName);
+					clients.get(i).setPermissao(true);
+					teste = clients.get(i).getNome();
+
+					break;
+				}
 		}
 		break;
-		case("bye"):
-			Session byeSession;
-		byeSession = onMessage;
-
-		handleClose();
+		case("/bye"):
 		break;
 		default:
 			try {
-				onMessage.getBasicRemote().sendText("Comando inválido, utilizar apenasos comandos seguintes:");
-				onMessage.getBasicRemote().sendText("send -all(envia mensagem para a sala)");
-				onMessage.getBasicRemote().sendText("send -user(enviar mensagem para um usuario especifico)");
-				onMessage.getBasicRemote().sendText("bye (sair do grupo)");
-				onMessage.getBasicRemote().sendText("list (listar usuários na sala)");
-				onMessage.getBasicRemote().sendText("rename (renomear)");
+				onMessage.getBasicRemote().sendText("Comando inválido, utilizar apenas os comandos seguintes:");
+				onMessage.getBasicRemote().sendText("/send -all(envia mensagem para a sala)");
+				onMessage.getBasicRemote().sendText("/send -user(enviar mensagem para um usuario especifico)");
+				onMessage.getBasicRemote().sendText("/bye (sair do grupo)");
+				onMessage.getBasicRemote().sendText("/list (listar usuários na sala)");
+				onMessage.getBasicRemote().sendText("/rename (nome) para renomear");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
