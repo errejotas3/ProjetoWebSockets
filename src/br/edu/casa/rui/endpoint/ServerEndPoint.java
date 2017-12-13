@@ -59,24 +59,37 @@ public class ServerEndPoint {
 		return replyMessage;
 	}
 	@OnClose
-	public void handleClose() {
-//		for(int i = 0; i <= session.size(); i++) {
-//			if(close.getId().equals(session.get(i).getId())) {
-//
-//				String saiu = clients.get(i).getNome();
-//				for(int key : session.keySet()) {
-//					try {
-//						session.get(key).getBasicRemote().sendText(saiu + " Saiu do chat.");
-//					} catch (IOException e) {
-//						e.printStackTrace();
-//					}
-//				}
-//				session.remove(i, close);
-//				clients.remove(i, cliente.getNome().equals(saiu));
+	public void handleClose(Session onMessage) {
+		Session close = onMessage;
+		for(int i = 0; i <= session.size(); i++) {
+			if(close.getId().equals(session.get(i).getId())) {
+
+				String saiu = clients.get(i).getNome();
+				for(int key : session.keySet()) {
+					try {
+						session.get(key).getBasicRemote().sendText(saiu + " Saiu do chat.");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				try {
+					session.get(i).close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				clients.get(i).setNome("JonhDoe");
+				clients.get(i).setPermissao(false);
+				try {
+					session.get(i).close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				System.out.println("Cliente saiu do chat.");
-//			}else break;
-//		}
-//		
+			}else break;
+		}
+		
 
 	}
 	@OnError
@@ -214,6 +227,7 @@ public class ServerEndPoint {
 		}
 		break;
 		case("/bye"):
+			handleClose(onMessage);
 		break;
 		default:
 			try {
