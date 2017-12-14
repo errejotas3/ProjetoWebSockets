@@ -21,8 +21,8 @@ public class ServerEndPoint {
 	static int mapsize = 0;
 	static int idMessage;
 	int countFor = 0;
-	Session onOpen;
-	Session onMessage;
+	static Session onOpen;
+	static Session onMessage;
 	Cliente cliente = new Cliente();
 	@OnOpen
 	public void handleOpen(Session ses) {
@@ -52,7 +52,7 @@ public class ServerEndPoint {
 		for(int i = 0; i <= mapsize; i++) {
 			if(onMessage.getId() == session.get(i).getId()) {
 				recebida = message;
-				verificar(recebida, sesmessage);
+				verificar(recebida);
 			}
 		}
 		String replyMessage="";
@@ -60,43 +60,36 @@ public class ServerEndPoint {
 	}
 	@OnClose
 	public void handleClose(Session onMessage) {
-		Session close = onMessage;
-		for(int i = 0; i <= session.size(); i++) {
-			if(close.getId().equals(session.get(i).getId())) {
+		//		Session close = onMessage;
+		//		for(int i = 0; i <= session.size(); i++) {
+		//			if(close.getId().equals(session.get(i).getId())) {
+		//
+		//				String saiu = clients.get(i).getNome();
+		//				for(int key : session.keySet()) {
+		//					try {
+		//						session.get(key).getBasicRemote().sendText(saiu + " Saiu do chat.");
+		//					} catch (IOException e) {
+		//						e.printStackTrace();
+		//					}
+		//				}
+		//				clients.get(i).setNome("JonhDoe");
+		//				clients.get(i).setPermissao(false);
+		//				try {
+		//					session.get(i).close();
+		//				} catch (IOException e) {
+		//					e.printStackTrace();
+		//				}
+		//				System.out.println("Cliente saiu do chat.");
+		//			}else break;
+		//		}
 
-				String saiu = clients.get(i).getNome();
-				for(int key : session.keySet()) {
-					try {
-						session.get(key).getBasicRemote().sendText(saiu + " Saiu do chat.");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				try {
-					session.get(i).close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				clients.get(i).setNome("JonhDoe");
-				clients.get(i).setPermissao(false);
-				try {
-					session.get(i).close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				System.out.println("Cliente saiu do chat.");
-			}else break;
-		}
-		
 
 	}
 	@OnError
 	public void handleError(Throwable t) {
 		t.printStackTrace();
 	}
-	String verificar(String verifica, Session sesmessage) {
+	String verificar(String verifica) {
 		//TRATA A DATA
 		Date date = new Date();
 		SimpleDateFormat formatador = new SimpleDateFormat("dd/MM/yyyy");
@@ -128,9 +121,9 @@ public class ServerEndPoint {
 							finalMessage = verifica.replace("/send -all", "");
 							System.out.println(verifica);
 							System.out.println(finalMessage);
-							for(int key : session.keySet()) {
+							for(int key1 : session.keySet()) {
 								try {
-									session.get(key).getBasicRemote().sendText(userx + " diz: " + finalMessage + " - <" + horas + ":" + minutos + "><" + dataFormatada + ">");
+									session.get(key1).getBasicRemote().sendText(userx + " diz: " + finalMessage + " - <" + horas + ":" + minutos + "><" + dataFormatada + ">");
 								} catch (IOException e) {
 									e.printStackTrace();
 								}
@@ -227,7 +220,29 @@ public class ServerEndPoint {
 		}
 		break;
 		case("/bye"):
-			handleClose(onMessage);
+			String sessionId = onMessage.getId();
+		for(int sesId = 0; sesId <= session.size(); sesId++) {
+			if(session.get(sesId).getId().equals(sessionId)) {
+				String userLeft = clients.get(sesId).getNome();
+				for(int key1 : session.keySet()) {
+					try {
+						session.get(key1).getBasicRemote().sendText(userLeft + " saiu do chat.");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				clients.get(sesId).setNome("JonhDoe");
+				clients.get(sesId).setPermissao(false);
+				try {
+					session.get(sesId).close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				break;
+			}else
+			break;
+		}
+
 		break;
 		default:
 			try {
